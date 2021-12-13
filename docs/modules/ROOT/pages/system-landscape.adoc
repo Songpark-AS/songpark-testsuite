@@ -1,0 +1,17 @@
+= System landscape
+
+The testsuite requires a test environment which includes the following.
+
+* Two Teleporters
+  ** RobotRemoteServer installed, along with the correct tests scripts from testsuite installed
+  ** The correct version of python installed
+  ** The FPGA core installed
+  ** The BP program installed
+* Two RPi
+  ** RobotRemoteServer installed, along with the correct tests scripts from testsuite installed
+  ** The audio_analysis scripts installed
+  ** Wireshark installed
+* A server in the cloud that can be triggered remotely, running the RobotFramework tests
+* A working internet connection between the two Teleporters and the two RPis
+* A SIP server (kamailio) with the correct configuration on the Teleporters to make use of it
+* A server saving all the data from the test, as well as the generated report

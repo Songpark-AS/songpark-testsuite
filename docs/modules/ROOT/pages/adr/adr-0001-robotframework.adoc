@@ -1,0 +1,24 @@
+= ADR 1: Adopting Robot Framework
+
+
+== Context
+
+The Songpark solution is made up of twelve layers (network, physical hardware, FPGA, ARM/Linux, BP, SIP, virtual serial ports, TPX, MQTT, database, Platform and App), all working together to form the entire system. In addition, the physical hardware boxes (Teleporters), add an additional challenge in that they cannot be tested virtually like the other layers.
+
+Multiple layers need to be up and running in order to test the solution, and the knowledge is spread around the team.
+
+Testing is often done by the developers, but only during the development, with no knowledge if any updates breaks the solution, or if a new feature breaks some other part of the solution that was not needed to be up and running when developing the feature.
+
+Features are often underdocumented. Having the features run through a test will force at least a rudimentary documentation.
+
+== Decision
+
+We will adopt Robot Framework as the foundation of our test suite. Robot Framework is one of the industry standard test frameworks, with lots of modules available.
+
+== Status
+
+Accepted
+
+== Consequences
+
+Anyone developing the tests, will need to know python, as well as understand Robot Framework and how it works.

@@ -1,0 +1,94 @@
+= Architecture
+
+== Minimum architecture
+
+.Minimum setup of the architecture for the Songpark Testsuite
+image::songpark-testsuite.png[Songpark Testsuite]
+
+The minimum requirements for a testsuite is as follows:
+
+* Two Teleporters
+* Two RPi
+* A server in the cloud that can be triggered remotely, running the RobotFramework tests
+* A working internet connection between the two Teleporters and the two RPis
+* A SIP server (kamailio) with the correct configuration on the Teleporters to make use of it
+* A server saving all the data from the test, as well as the generated report
+
+Optional setup includes
+
+* A repository that can store the different versions of the software to be tested
+* An RPi sitting in the middle between the two Teleporters, acting as a Bridge Network, which allows to fiddle with the network.
+
+== Physical setup
+
+.Physical setup of a test Teleporter
+image::physical-setup.jpg[Physical setup of a test Teleporter] 
+
+The physical setup of a test Teleporter, as required by the test suite, is quite complex.
+
+. The Teleporter itself. In this picture it is a Zedboard development board from Xilinx.
+. A physical router. In this setup it is an EdgeRouter. Used for mirroring traffic.
+. A secondary RPi. Used for capturing network traffic, generating audio and capturing audio.
+. A TP cable, connecting the secondary RPi to the Internet.
+. In this particular setup, the Zedboard needed another ETH PHY, instead of the one on the development board. In future versions this should not be necessary.
+. The TP cable from the EdgeRouter is connected the the ETH PHY. This cable is mirrored to port 3 on the EdgeRouter.
+. The TP cable from the EdgeRouter is connected to the internet.
+. The TP cable from the EdgeRouter is connected to the secondary RPi via a USB-to-TP converter. All traffic on this port is mirrored from the traffic that connects the Zedboard with the internet.
+. RCA cables (red and white in one end and a metal pin 3.5 mm in the other end), connected to the Teleporter. Sound out (TP) connected to sound in (secondary RPi) and sound in (TP) connected to sound out (secondary RPi).
+. RCA cables connected to the Teleporter
+. The Zedboard is connected to the secondary RPi via minicom.
+
+
+== Layers
+
+The Songpark solution consists of twelve layers. Each layer is connected to a miminum of one other layer, and all of the layers need to work together in order to make the system useable.
+
+The layers are, from bottom to top:
+
+=== Network
+
+All the packets going over the internet, having to deal with NAT in routers, jitter, delays, lost packets, packets out of order, etc.
+
+=== Physical hardware
+
+Analog soundcard, power card, etc.
+
+=== FPGA
+
+The core of the solution that handles the transfer of sound.
+
+=== ARM/Linux
+
+Sitting physically on the same board as the FPGA, this ARM processor is run by Linux and hosts BP, SIP client and TPX.
+
+=== BP
+
+Bridge program (BP) is what interacts with the FPGA from ARM level. This is in turn used by TPX.
+
+=== SIP
+
+Consists of three parts. A server (kamailio), the platform and the SIP client on the ARM layer. The SIP client in turns consumes BP and has everything in one file called `connect`.
+
+=== Virtual serial ports
+
+The `connect` program is written for human interaction as a CLI program. In order to drive this interactivelly, virtual serial ports are implemented in the Teleporter in order to allow other programs read the output of `connect` and respond to `connect` via writing to the input of `connect`.
+
+=== TPX
+
+The program responsible for communicating with the outside world. Talks with Platform and App via a combination of HTTP requests and MQTT. Communicates with  the `connect` program via virtual serial ports.
+
+=== MQTT
+
+An MQTT broker for communication between TPX, Platform and App.
+
+=== database
+
+A postgres database, keeping stateful data.
+
+=== Platform
+
+The platform is a backend application, that ties apps, teleporters and the database together.
+
+=== App
+
+The app is the primary way an enduser will interact with a Teleporter.

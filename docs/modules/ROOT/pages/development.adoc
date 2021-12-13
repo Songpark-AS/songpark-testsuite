@@ -1,0 +1,22 @@
+= Development
+
+Development is done under the songpark testsuite branch. The testsuite uses https://robotframework.org[Robot Framework].
+
+== requirements for development
+
+The testsuite requires Python 3.7 or 3.8, at minimum two physical Teleporters that have been setup with the correct dependencies, as well as two physically connected Raspberry Pis (henceforth called RPi).
+
+It is recommended that the testsuite runs in its own virtualenv when developing the RobotFramework tests.
+
+== setup
+
+
+. Have virtualenv and virtualenvwrapper installed. See links on how to install them otherwise.
+  .. `pip3 install virtualenv`
+  .. https://virtualenvwrapper.readthedocs.io/en/latest/install.html[virtualenvwrapper installation instructions]
+. `mkvirtualenv songpark-testsuite`
+. `workon songpark-testsuite`
+. `pip install requirements.txt`
+. `robot <test.robot>`
+
+
