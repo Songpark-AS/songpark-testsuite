@@ -1,0 +1,27 @@
+= Tests
+
+Tests from robotframework are located under the tests directory. Under the tests directory, different directories reside, each corresponding to the test area of the solution that the tests therein test.
+
+----
+- tests
+  - teleporter
+  - platform+teleporter
+  - app+platform
+  - system
+----
+
+== teleporter tests
+
+These tests are designed to test the Teleporters, as well as give back useful data to the FPGA development team. The test layers are FPGA, BP and SIP.
+
+== platform+teleporter tests
+
+The platform will have its own tests, robotframework expands on those by testing the integration between the platform and the teleporter.
+
+== app+platform
+
+The app will have its own tests, robotframework expands on those by testing the integration between the app and the platform.
+
+== system
+
+The system tests are for the entire solution, where the entire system is tested.

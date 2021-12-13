@@ -1,0 +1,3 @@
+= Configuration
+
+Different physical setups will require different hardware configurations. More to follow.

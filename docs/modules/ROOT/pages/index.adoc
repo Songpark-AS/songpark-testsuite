@@ -1,0 +1,12 @@
+= Songpark Testsuite
+
+This is the testsuite for Songpark. It's goal is to test the entire solution with repeatable and automatic tests, that can test both integrations between different layers, as well as the entire solution.
+
+- xref:development.adoc[Development]
+- xref:deployment.adoc[Deployment]
+- xref:tests.adoc[Tests]
+- xref:secrets.adoc[Secrets]
+- xref:architecture.adoc[Architecture]
+- xref:adr.adoc[ADR]
+- xref:system-landscape.adoc[System landscape]
+- xref:configuration.adoc[Configuration]
