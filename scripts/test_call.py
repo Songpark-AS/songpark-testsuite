@@ -2,14 +2,19 @@ import logging
 from time import sleep
 import serial
 import os
+import sys
 
 # from AudioTestLibrary import TARGET_DEVICE
 
 SERVICE_NAME = "sp-bridgeprogram"
-TARGET_DEVICE = b"sip:9106@voip1.inonit.no \n"
 ser = serial.Serial("/tmp/ttyTPX")
 
 logger = logging.getLogger("SONGPARK")
+
+
+def command(cmd):
+    cmd_str = cmd + " \n"
+    return bytes(cmd_str, "UTF-8")
 
 
 def check_service_status(service_name):
@@ -17,21 +22,22 @@ def check_service_status(service_name):
     return True if stat == 0 else False
 
 
-def start_call():
+def start_call(target):
     # if check_service_status(SERVICE_NAME):
     logger.info("STARTING TO MAKE CALL")
-    ser.write(b"m \n")
+    ser.write(command("m"))
     sleep(2)
-    ser.write(TARGET_DEVICE)
+    ser.write(command(target))
     logger.info("CALL HAS BEEN STARTED")
     # logger.error("TPX SERIAL PORT SERVICE IS NOT RUNNING")
 
 
 if __name__ == "__main__":
+    target_device = sys.argv[1]
     print("STARTING CALL")
-    start_call()
+    start_call(target_device)
     print("CALL STARTED")
-    sleep(60)
-    ser.write(b"ha \n")
+    sleep(int(sys.argv[2]))
+    ser.write(command("ha"))
     print("CALL ENDED AFTER 60 seconds")
     ser.close()

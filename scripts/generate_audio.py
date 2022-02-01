@@ -66,11 +66,13 @@ try:
     with sd.OutputStream(
         device=args.device, channels=1, callback=callback, samplerate=samplerate
     ):
+        print("SIGNAL GENRATION STARTED")
         print("#" * 80)
         print("press Return to quit")
         print("#" * 80)
         input()
 except KeyboardInterrupt:
+    print(" \n AUDIO GENERATION STOPPED")
     parser.exit("")
 except Exception as e:
     parser.exit(type(e).__name__ + ": " + str(e))
