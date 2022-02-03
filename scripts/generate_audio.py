@@ -4,6 +4,9 @@ import sys
 import numpy as np
 import sounddevice as sd
 
+# duration = int(sys.argv[1])
+# print(duration)
+
 
 def int_or_str(text):
     """Helper function for argument parsing."""
@@ -28,6 +31,13 @@ parser = argparse.ArgumentParser(
     description=__doc__,
     formatter_class=argparse.RawDescriptionHelpFormatter,
     parents=[parser],
+)
+parser.add_argument(
+    "duration",
+    metavar="DURATION",
+    type=int,
+    default=60,
+    help="duration is seconds (default is 60s)",
 )
 parser.add_argument(
     "frequency",
@@ -70,9 +80,9 @@ try:
         print("#" * 80)
         print("press Return to quit")
         print("#" * 80)
-        input()
+        sd.sleep(int(args.duration * 1000))
+        print(" \n AUDIO GENERATION STOPPED")
 except KeyboardInterrupt:
-    print(" \n AUDIO GENERATION STOPPED")
     parser.exit("")
 except Exception as e:
     parser.exit(type(e).__name__ + ": " + str(e))

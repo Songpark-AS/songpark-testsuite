@@ -2,6 +2,7 @@ import argparse
 import tempfile
 import queue
 import sys
+from time import sleep
 
 import sounddevice as sd
 import soundfile as sf
@@ -33,6 +34,13 @@ parser = argparse.ArgumentParser(
     description=__doc__,
     formatter_class=argparse.RawDescriptionHelpFormatter,
     parents=[parser],
+)
+parser.add_argument(
+    "duration",
+    metavar="DURATION",
+    type=int,
+    default=60,
+    help="duration is seconds (default is 60s)",
 )
 parser.add_argument(
     "filename",
@@ -87,8 +95,10 @@ try:
             print("#" * 80)
             print("press Ctrl+C to stop the recording")
             print("#" * 80)
-            while True:
+            while sleep(int(args.duration)):
                 file.write(q.get())
+            sd.sleep(int(args.duration * 1000))
+            print("\nRecording finished: " + repr(args.filename))
 except KeyboardInterrupt:
     print("\nRecording finished: " + repr(args.filename))
     parser.exit(0)
