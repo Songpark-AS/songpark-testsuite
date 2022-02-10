@@ -85,10 +85,7 @@ def start_pi_test(host, mode):
             print("UPLOADING AUDIO FILE")
             target_name = f"/tmp/{args.test_name}.wav"
             client.exec_command(
-                f"python3 upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {args.test_name}.wav {target_name}"
-            )
-            print(
-                f"python3 upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {args.test_name}.wav {target_name}"
+                f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {args.test_name}.wav {target_name}"
             )
             print("UPLOADING SUCCESSFUL")
             client.close()
