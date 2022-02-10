@@ -7,6 +7,8 @@ import logging
 import threading
 import time
 
+from scripts.lab import test_on_lab
+
 cfg = configparser.ConfigParser()
 cfg.read("test.ini")
 
@@ -17,11 +19,10 @@ parser.add_argument(
     type=str,
     help="the name to be used for the test e.g 'test_1'",
 )
+parser.add_argument(
+    "-m", "--mode", type=str, default="normal", help="input testing mode lab or normal"
+)
 args = parser.parse_args()
-
-
-def main():
-    print(os.name)
 
 
 def start_zed_test(host):
@@ -95,10 +96,7 @@ def start_pi_test(host, mode):
         print("error")
 
 
-if __name__ == "__main__":
-    format = "%(asctime)s: %(message)s"
-    logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
-
+def default_test():
     logging.info(f"SONG_TST: Starting {args.test_name}")
 
     logging.info("SONG-TST: Starting a call on %s", cfg.get("base", "Z_ALPHA"))
@@ -116,4 +114,28 @@ if __name__ == "__main__":
     r_omega.start()
     r_alpha.start()
     z_alpha.start()
-    main()
+
+
+def lab_test():
+    logging.info("Testing the lab")
+    test_on_lab(
+        cfg.get("lab", "BEATLES_HOST"),
+        cfg.get("lab", "ELVIS_HOST"),
+        cfg.get("lab", "ELVIS_PI_HOST"),
+        args.test_name,
+        cfg.get("lab", "TEST_RUNTIME"),
+        cfg,
+        cfg.get("base", "SSH_KEY"),
+        cfg.get("base", "PASSPHRASE"),
+    )
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    format = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
+
+    if args.mode == "lab":
+        lab_test()
+    else:
+        default_test()
