@@ -20,7 +20,11 @@ parser.add_argument(
     help="the name to be used for the test e.g 'test_1'",
 )
 parser.add_argument(
-    "-m", "--mode", type=str, default="normal", help="input testing mode lab or normal"
+    "-m",
+    "--mode",
+    type=str,
+    default="normal",
+    help="input testing mode lab or normal (default is normal)",
 )
 args = parser.parse_args()
 
