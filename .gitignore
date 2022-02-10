@@ -1,4 +1,9 @@
+.clj-kondo/
+.lsp/
 env/
 *.html
+*.pub
+*.wav
+test.ini
 __pycache__
 output.xml
