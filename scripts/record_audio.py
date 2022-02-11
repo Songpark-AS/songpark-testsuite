@@ -2,7 +2,10 @@ import argparse
 import tempfile
 import queue
 import sys
+import threading
 from time import sleep
+from tracemalloc import stop
+
 
 import sounddevice as sd
 import soundfile as sf
@@ -70,37 +73,49 @@ def callback(indata, frames, time, status):
     q.put(indata.copy())
 
 
-try:
-    if args.samplerate is None:
-        device_info = sd.query_devices(args.device, "input")
-        # soundfile expects an int, sounddevice provides a float:
-        args.samplerate = int(device_info["default_samplerate"])
-    if args.filename is None:
-        args.filename = tempfile.mktemp(prefix="test_audio", suffix=".wav", dir="")
+def record():
+    try:
+        print(f"************************{args.device}***********************")
+        if args.samplerate is None:
+            device_info = sd.query_devices(args.device, "input")
+            print(f"*************************{device_info}*************************")
+            # soundfile expects an int, sounddevice provides a float:
+            args.samplerate = int(device_info["default_samplerate"])
+        if args.filename is None:
+            args.filename = tempfile.mktemp(prefix="test_audio", suffix=".wav", dir="")
 
-    # Make sure the file is opened before recording anything:
-    with sf.SoundFile(
-        args.filename,
-        mode="x",
-        samplerate=args.samplerate,
-        channels=args.channels,
-        subtype=args.subtype,
-    ) as file:
-        with sd.InputStream(
+        # Make sure the file is opened before recording anything:
+        with sf.SoundFile(
+            args.filename,
+            mode="x",
             samplerate=args.samplerate,
-            device=args.device,
             channels=args.channels,
-            callback=callback,
-        ):
-            print("#" * 80)
-            print("press Ctrl+C to stop the recording")
-            print("#" * 80)
-            while sleep(int(args.duration)):
-                file.write(q.get())
-            sd.sleep(int(args.duration * 1000))
-            print("\nRecording finished: " + repr(args.filename))
-except KeyboardInterrupt:
-    print("\nRecording finished: " + repr(args.filename))
-    parser.exit(0)
-except Exception as e:
-    parser.exit(type(e).__name__ + ": " + str(e))
+            subtype=args.subtype,
+        ) as file:
+            with sd.InputStream(
+                samplerate=args.samplerate,
+                device=args.device,
+                channels=args.channels,
+                callback=callback,
+            ):
+                print("#" * 80)
+                print("press Ctrl+C to stop the recording")
+                print("#" * 80)
+                while True:
+                    file.write(q.get())
+                    if stop_thread:
+                        break
+    except KeyboardInterrupt:
+        print("\nRecording finished: " + repr(args.filename))
+        parser.exit(0)
+    except Exception as e:
+        parser.exit(type(e).__name__ + ": " + str(e))
+
+
+if __name__ == "__main__":
+    stop_thread = False
+    rec = threading.Thread(target=record)
+    rec.start()
+    sleep(int(args.duration))
+    stop_thread = True
+    rec.join()

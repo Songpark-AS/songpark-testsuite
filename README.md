@@ -22,4 +22,6 @@ On the host machine (Your laptop), setup the testing enviroment by running the f
 
 This is run on __python 3.8__ or later.
 
-`python run.py`
+`python run.py <test-name> -m <mode>`
+
+run `python run.py -h` for help
