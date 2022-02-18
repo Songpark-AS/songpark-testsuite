@@ -1,3 +1,5 @@
+import argparse
+
 import logging
 from time import sleep
 import serial
@@ -12,8 +14,11 @@ ser = serial.Serial("/tmp/ttyTPX")
 logger = logging.getLogger("SONGPARK")
 
 
-def command(cmd):
-    cmd_str = cmd + " \n"
+def command(cmd, value=""):
+    if value == "":
+        cmd_str = cmd + " \n"
+    else:
+        cmd_str = "{0} {1} \n".format(cmd, value)
     return bytes(cmd_str, "UTF-8")
 
 
@@ -37,6 +42,7 @@ if __name__ == "__main__":
     print("STARTING CALL")
     start_call(target_device)
     print("CALL STARTED")
+    ser.write(command("pd", int(sys.argv[3])))
     sleep(int(sys.argv[2]))
     ser.write(command("ha"))
     print("CALL ENDED AFTER 60 seconds")

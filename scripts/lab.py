@@ -1,3 +1,4 @@
+from time import sleep
 import paramiko
 import os
 import threading
@@ -22,7 +23,7 @@ def create_client(host, key="", passphrase="", device="pi"):
             )
         return client
     except:
-        raise Exception("SOMETHING HAPPENED COUILD NOT CREATE CLIENT")
+        raise Exception(f"SOMETHING HAPPENED COULD NOT CREATE {host} CLIENT")
 
 
 def run_on_zed(host, name, target, key, key_pass, run_time):
@@ -39,10 +40,10 @@ def run_on_zed(host, name, target, key, key_pass, run_time):
 
 def test_on_lab(beatles, elvis, elvis_pi, test_name, run_time, cfg, key, key_pass):
     beatles_t = threading.Thread(
-        target=run_on_zed, args=(beatles, "beatles", elvis, key, key_pass)
+        target=run_on_zed, args=(beatles, "beatles", elvis, key, key_pass, run_time)
     )
     elvis_t = threading.Thread(
-        target=run_on_zed, args=(elvis, "elvis", beatles, key, key_pass)
+        target=run_on_zed, args=(elvis, "elvis", beatles, key, key_pass, run_time)
     )
     print("CREATING ELVIS PI CLIENT")
     elvis_pi = create_client(elvis_pi)
@@ -62,42 +63,43 @@ def test_on_lab(beatles, elvis, elvis_pi, test_name, run_time, cfg, key, key_pas
     print(stdout.readlines())
     print("UPLOADING AUDIO FILE")
     target_name = f"/tmp/{test_name}.wav"
-    print(
-        f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {test_name}.wav {target_name}"
-    )
     stdout = elvis_pi.exec_command(
         f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {test_name}.wav {target_name}"
     )[1]
     print(stdout.readlines())
-    print("UPLOADING SUCCESSFUL")
     elvis_pi.close()
 
 
-def capture_wireshark(bridge, cfg, timeout):
+def capture_wireshark(bridge, cfg, timeout, test_name):
     print("CREATING BRIDGE CLIENT")
     bridge_pi = create_client(bridge)
     sftp = bridge_pi.open_sftp()
     sftp.put("scripts/wirecapture.py", "/tmp/wirecapture.py")
     print("STARTING WIRESHARK CAPTURE")
-    stdout = bridge_pi.exec_command(f"python3 /tmp/wirecapture.py {timeout}")[1]
+    stdout = bridge_pi.exec_command(
+        f"python3 /tmp/wirecapture.py {timeout} {test_name}"
+    )[1]
+    sleep(int(timeout))
     print(stdout.readlines())
     print("UPLOADING WIRESHARK FILE")
     print(
         f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem wsharkcapture-test/tmp/wireshark-test"
     )
     stdout = bridge_pi.exec_command(
-        f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem wsharkcapture-test/tmp/wireshark-test"
+        f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {test_name} /tmp/{test_name}"
     )[1]
     print(stdout.readlines())
-    print("UPLOADING SUCCESSFUL")
     bridge_pi.close()
 
 
 def test_on_lab_wireshark(
     beatles, elvis, elvis_pi, bridge, test_name, run_time, cfg, key, key_pass
 ):
-    bridge_thread = threading.Thread(
-        target=capture_wireshark, args=(bridge, cfg, run_time)
-    )
-    bridge_thread.start()
-    test_on_lab(beatles, elvis, elvis_pi, test_name, run_time, cfg, key, key_pass)
+    try:
+        bridge_thread = threading.Thread(
+            target=capture_wireshark, args=(bridge, cfg, run_time, test_name)
+        )
+        bridge_thread.start()
+        test_on_lab(beatles, elvis, elvis_pi, test_name, run_time, cfg, key, key_pass)
+    except Exception as e:
+        print(e)

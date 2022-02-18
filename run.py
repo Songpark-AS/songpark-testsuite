@@ -53,8 +53,9 @@ def start_zed_test(host):
         sftp.close()
         sip_id = cfg.get("base", "SIP_ID")
         timeout = cfg.get("test1", "TEST_RUNTIME")
+        playback = cfg.get("base", "PLAYBACK_DELAY")
         _, stdout, _ = client.exec_command(
-            f"python3 /tmp/test_call.py {sip_id} {timeout}"
+            f"python3 /tmp/test_call.py {sip_id} {timeout} {playback}"
         )[1]
         print(stdout)
         client.close()
@@ -100,7 +101,6 @@ def start_pi_test(host, mode):
                 f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {args.test_name}.wav {target_name}"
             )[1]
             print(logs.readlines())
-            print("UPLOADING SUCCESSFUL")
             client.close()
             sys.exit(0)
 
