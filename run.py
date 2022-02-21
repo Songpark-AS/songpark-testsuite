@@ -7,7 +7,7 @@ import logging
 import threading
 import time
 
-from scripts.lab import test_on_lab
+from scripts.lab import test_on_lab, test_on_lab_wireshark
 
 cfg = configparser.ConfigParser()
 cfg.read("test.ini")
@@ -25,6 +25,13 @@ parser.add_argument(
     type=str,
     default="normal",
     help="input testing mode lab or normal (default is normal)",
+)
+parser.add_argument(
+    "-w",
+    "--wireshark",
+    type=bool,
+    default=False,
+    help="input wireshark capture True or False (default is False)",
 )
 args = parser.parse_args()
 
@@ -46,8 +53,9 @@ def start_zed_test(host):
         sftp.close()
         sip_id = cfg.get("base", "SIP_ID")
         timeout = cfg.get("test1", "TEST_RUNTIME")
+        playback = cfg.get("base", "PLAYBACK_DELAY")
         _, stdout, _ = client.exec_command(
-            f"python3 /tmp/test_call.py {sip_id} {timeout}"
+            f"python3 /tmp/test_call.py {sip_id} {timeout} {playback}"
         )[1]
         print(stdout)
         client.close()
@@ -89,10 +97,10 @@ def start_pi_test(host, mode):
             print(stdout.readlines())
             print("UPLOADING AUDIO FILE")
             target_name = f"/tmp/{args.test_name}.wav"
-            client.exec_command(
+            logs = client.exec_command(
                 f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {args.test_name}.wav {target_name}"
-            )
-            print("UPLOADING SUCCESSFUL")
+            )[1]
+            print(logs.readlines())
             client.close()
             sys.exit(0)
 
@@ -122,17 +130,31 @@ def default_test():
 
 def lab_test():
     logging.info("Testing the lab")
-    test_on_lab(
-        cfg.get("lab", "BEATLES_HOST"),
-        cfg.get("lab", "ELVIS_HOST"),
-        cfg.get("lab", "ELVIS_PI_HOST"),
-        args.test_name,
-        cfg.get("lab", "TEST_RUNTIME"),
-        cfg,
-        cfg.get("base", "SSH_KEY"),
-        cfg.get("base", "PASSPHRASE"),
-    )
-    sys.exit(0)
+    if args.wireshark:
+        test_on_lab_wireshark(
+            cfg.get("lab", "BEATLES_HOST"),
+            cfg.get("lab", "ELVIS_HOST"),
+            cfg.get("lab", "ELVIS_PI_HOST"),
+            cfg.get("lab", "PI_BRIDGE"),
+            args.test_name,
+            cfg.get("lab", "TEST_RUNTIME"),
+            cfg,
+            cfg.get("base", "SSH_KEY"),
+            cfg.get("base", "PASSPHRASE"),
+        )
+        sys.exit(0)
+    else:
+        test_on_lab(
+            cfg.get("lab", "BEATLES_HOST"),
+            cfg.get("lab", "ELVIS_HOST"),
+            cfg.get("lab", "ELVIS_PI_HOST"),
+            args.test_name,
+            cfg.get("lab", "TEST_RUNTIME"),
+            cfg,
+            cfg.get("base", "SSH_KEY"),
+            cfg.get("base", "PASSPHRASE"),
+        )
+        sys.exit(0)
 
 
 if __name__ == "__main__":

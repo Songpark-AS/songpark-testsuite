@@ -40,8 +40,8 @@ def upload_file(host, user, passphrase, key_file, filename, target_name):
             )
         )
         client.close()
-    except IndexError:
-        print("Error")
+    except:
+        print("UPLOAD FAILED SOMETHING HAPPENED CHECK UPLOAD DESTINATION")
 
 
 if __name__ == "__main__":

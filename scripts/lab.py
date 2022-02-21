@@ -1,5 +1,7 @@
+from time import sleep
 import paramiko
 import os
+import threading
 
 
 def create_client(host, key="", passphrase="", device="pi"):
@@ -21,25 +23,33 @@ def create_client(host, key="", passphrase="", device="pi"):
             )
         return client
     except:
-        raise Exception("SOMETHING HAPPENED COUILD NOT CREATE CLIENT")
+        raise Exception(f"SOMETHING HAPPENED COULD NOT CREATE {host} CLIENT")
+
+
+def run_on_zed(host, name, target, key, key_pass, run_time):
+    print(f"CREATING {name} CLIENT")
+    client = create_client(host, key, key_pass, "z")
+    sftp = client.open_sftp()
+    sftp.put("scripts/run_connnect.py", "/tmp/run_connect.py")
+    stdout = client.exec_command(
+        f"python3 /tmp/run_connect.py {target} {name} {run_time}"
+    )[1]
+    print(stdout.readlines())
+    client.close()
 
 
 def test_on_lab(beatles, elvis, elvis_pi, test_name, run_time, cfg, key, key_pass):
-    print("CREATING BEATLES CLIENT")
-    beatles = create_client(beatles, key, key_pass, "z")
-    print("CREATING ELVIS CLIENT")
-    elvis = create_client(elvis, key, key_pass, "z")
+    beatles_t = threading.Thread(
+        target=run_on_zed, args=(beatles, "beatles", elvis, key, key_pass, run_time)
+    )
+    elvis_t = threading.Thread(
+        target=run_on_zed, args=(elvis, "elvis", beatles, key, key_pass, run_time)
+    )
     print("CREATING ELVIS PI CLIENT")
     elvis_pi = create_client(elvis_pi)
 
-    print("starting connect on beatles ")
-    beatles.exec_command("connect_manual_2022-01-25   10.1.1.102 2000 2001")
-    print("starting connect on elvis")
-    elvis.exec_command("connect_manual_2022-01-25 10.1.1.100 2000 2001")
-
-    beatles.exec_command("sync")
-    beatles.exec_command("start")
-    elvis.exec_command("start")
+    beatles_t.start()
+    elvis_t.start()
 
     sftp = elvis_pi.open_sftp()
     print("RECORDING AUDIO")
@@ -53,13 +63,43 @@ def test_on_lab(beatles, elvis, elvis_pi, test_name, run_time, cfg, key, key_pas
     print(stdout.readlines())
     print("UPLOADING AUDIO FILE")
     target_name = f"/tmp/{test_name}.wav"
-    elvis_pi.exec_command(
+    stdout = elvis_pi.exec_command(
         f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {test_name}.wav {target_name}"
-    )
-    print("UPLOADING SUCCESSFUL")
+    )[1]
+    print(stdout.readlines())
     elvis_pi.close()
 
-    beatles.exec_command("ha")
 
-    beatles.close()
-    elvis.close()
+def capture_wireshark(bridge, cfg, timeout, test_name):
+    print("CREATING BRIDGE CLIENT")
+    bridge_pi = create_client(bridge)
+    sftp = bridge_pi.open_sftp()
+    sftp.put("scripts/wirecapture.py", "/tmp/wirecapture.py")
+    print("STARTING WIRESHARK CAPTURE")
+    stdout = bridge_pi.exec_command(
+        f"python3 /tmp/wirecapture.py {timeout} {test_name}"
+    )[1]
+    sleep(int(timeout))
+    print(stdout.readlines())
+    print("UPLOADING WIRESHARK FILE")
+    print(
+        f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem wsharkcapture-test/tmp/wireshark-test"
+    )
+    stdout = bridge_pi.exec_command(
+        f"python3 /tmp/upload.py {cfg.get('base', 'STORAGE_HOST')} {cfg.get('base', 'SG_HOST_USER')} {cfg.get('base', 'PASSPHRASE')} /tmp/ubuntu-rsync-server.pem {test_name} /tmp/{test_name}"
+    )[1]
+    print(stdout.readlines())
+    bridge_pi.close()
+
+
+def test_on_lab_wireshark(
+    beatles, elvis, elvis_pi, bridge, test_name, run_time, cfg, key, key_pass
+):
+    try:
+        bridge_thread = threading.Thread(
+            target=capture_wireshark, args=(bridge, cfg, run_time, test_name)
+        )
+        bridge_thread.start()
+        test_on_lab(beatles, elvis, elvis_pi, test_name, run_time, cfg, key, key_pass)
+    except Exception as e:
+        print(e)

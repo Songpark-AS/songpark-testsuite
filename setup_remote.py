@@ -23,8 +23,8 @@ def setup(host, device):
             client.connect(
                 host,
                 username="root",
-                password=cfg.get("test", "PASSWORD"),
-                key_filename=cfg.get("test", "SSH_KEY"),
+                password=cfg.get("base", "PASSWORD"),
+                key_filename=cfg.get("base", "SSH_KEY"),
             )
         else:
             client.connect(
@@ -52,11 +52,11 @@ if __name__ == "__main__":
     logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
 
     logging.info("SONG-TST: Setting two Zedboards")
-    z_alpha = threading.Thread(target=setup, args=(cfg.get("test", "Z_ALPHA"), "zed"))
-    z_omega = threading.Thread(target=setup, args=(cfg.get("test", "Z_ALPHA"), "zed"))
+    z_alpha = threading.Thread(target=setup, args=(cfg.get("base", "Z_ALPHA"), "zed"))
+    z_omega = threading.Thread(target=setup, args=(cfg.get("base", "Z_ALPHA"), "zed"))
     logging.info("SONG-TST: Setting two Raspberry Pis")
-    r_alpha = threading.Thread(target=setup, args=(cfg.get("test", "R_ALPHA"), "pi"))
-    r_omega = threading.Thread(target=setup, args=(cfg.get("test", "R_OMEGA"), "pi"))
+    r_alpha = threading.Thread(target=setup, args=(cfg.get("base", "R_ALPHA"), "pi"))
+    r_omega = threading.Thread(target=setup, args=(cfg.get("base", "R_OMEGA"), "pi"))
 
     z_alpha.start()
     z_omega.start()
